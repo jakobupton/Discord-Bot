@@ -1,4 +1,5 @@
 import asyncio
+import random
 import discord
 import time
 import openai
@@ -21,6 +22,17 @@ def run_discord_bot():
         #     if not member.bot:
         #         allMembersData[member.id] = {}
 
+    @bot.slash_command(description="Flip a coin!")
+    async def flip(ctx):
+        flipRandom = random.randint(0, 1)
+        embed = discord.Embed(title="🪙Coin Flip🪙", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                              description="{name} flipped a coin and got {outcome}!".format(name=ctx.author.name,
+                                                                                            outcome="heads" if flipRandom == 0 else "tails"))  # set text based on outcome
+        embed.set_image(
+            url="https://i.imgur.com/smWP3ez.png" if flipRandom == 0 else "https://i.imgur.com/DC00SAL.png")  # set picture based on outcome
+        embed.set_footer(text="Live by the coin, die by the coin.")
+        await ctx.respond(embed=embed)
+
     @bot.slash_command(description="Ask ChatGPT!")
     async def gpt(ctx, question):
         await ctx.respond("Working on that...")
@@ -32,24 +44,29 @@ def run_discord_bot():
         )
         await ctx.edit(content=ctx.author.name + " asked: " + question + "\n" + str(completion.choices[0].message['content']))
 
-    @bot.event
-    async def on_voice_state_update(member, before, after):
-        generalChat = member.guild.system_channel
-        if before.channel is None and after.channel is not None:  # Joins Channel
-            await generalChat.send(
-                member.name + " " + str(member.id) + " joined at " + time.strftime("%H:%M:%S", time.localtime()))
-        elif before.channel is not None and after.channel is None:  # leaves Channel
-            await generalChat.send(
-                member.name + " " + str(member.id) + " left at " + time.strftime("%H:%M:%S", time.localtime()))
-        elif before.channel is not None and after.channel is not None:  # switches channel
-            await generalChat.send(member.name + " " + str(
-                member.id) + " changed from " + before.channel.name + " to " + after.channel.name + " at " + time.strftime(
-                "%H:%M:%S", time.localtime()))
+    # @bot.event
+    # async def on_voice_state_update(member, before, after):
+    #     generalChat = member.guild.system_channel
+    #     if before.channel is None and after.channel is not None:  # Joins Channel
+    #         await generalChat.send(
+    #             member.name + " " + str(member.id) + " joined at " + time.strftime("%H:%M:%S", time.localtime()))
+    #     elif before.channel is not None and after.channel is None:  # leaves Channel
+    #         await generalChat.send(
+    #             member.name + " " + str(member.id) + " left at " + time.strftime("%H:%M:%S", time.localtime()))
+    #     elif before.channel is not None and after.channel is not None:  # switches channel
+    #         await generalChat.send(member.name + " " + str(
+    #             member.id) + " changed from " + before.channel.name + " to " + after.channel.name + " at " + time.strftime(
+    #             "%H:%M:%S", time.localtime()))
 
     @bot.event
     async def on_message(message):
         if message.author == bot.user:
             return
-        await message.channel.send("yo")
+        if message.author.name == 'gary guys':
+            await message.add_reaction('🎄')
+            await message.add_reaction('🇳')
+            await message.add_reaction('🅾️')
+            await message.add_reaction('🇴')
+            await message.add_reaction('🅱️')
 
     bot.run(token)
