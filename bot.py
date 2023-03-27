@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import time
 import openai
@@ -7,8 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 token = str(os.getenv('DISC_TOKEN'))
 openai.api_key = os.getenv('OPENAI_KEY')
-print(openai.Model.list())
-allMembersData = {}
+# allMembersData = {}
 
 
 def run_discord_bot():
@@ -17,19 +17,20 @@ def run_discord_bot():
     @bot.event
     async def on_ready():  # Bot ready, print message
         print(bot.user.name + " logged in successfully at " + time.strftime("%H:%M:%S", time.localtime()))
-        for member in bot.users:
-            if not member.bot:
-                allMembersData[member.id] = {}
+        # for member in bot.users:
+        #     if not member.bot:
+        #         allMembersData[member.id] = {}
 
     @bot.slash_command(description="Ask ChatGPT!")
     async def gpt(ctx, question):
+        await ctx.respond("Working on that...")
         completion = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "user", "content": question}
             ]
         )
-        await ctx.respond(ctx.author.name + " asked: " + question + str(completion.choices[0].message['content']))
+        await ctx.edit(content=ctx.author.name + " asked: " + question + "\n" + str(completion.choices[0].message['content']))
 
     @bot.event
     async def on_voice_state_update(member, before, after):
