@@ -42,7 +42,7 @@ def run_discord_bot():
                 {"role": "user", "content": question}
             ]
         )
-        await ctx.edit(content=ctx.author.name + " asked: " + question + "\n" + str(completion.choices[0].message['content']))
+        await ctx.edit(content=ctx.author.name + " asked: " + question + "\n GPT says:" + str(completion.choices[0].message['content']))
 
     # @bot.event
     # async def on_voice_state_update(member, before, after):
