@@ -5,6 +5,7 @@ import time
 import openai
 import os
 from dotenv import load_dotenv
+from discord import Color
 
 load_dotenv()
 token = str(os.getenv('DISC_TOKEN'))
@@ -22,6 +23,7 @@ def run_discord_bot():
         #     if not member.bot:
         #         allMembersData[member.id] = {}
 
+    #-=-=-=-=-=-=-=-=- Coin Flip Command -=-=-=-=-=-=-=-=-#
     @bot.slash_command(description="Flip a coin!")
     async def flip(ctx):
         flipRandom = random.randint(0, 1)
@@ -33,6 +35,7 @@ def run_discord_bot():
         embed.set_footer(text="Live by the coin, die by the coin.")
         await ctx.respond(embed=embed)
 
+    #-=-=-=-=-=-=-=-=- GPT Command -=-=-=-=-=-=-=-=-#
     @bot.slash_command(description="Ask ChatGPT!")
     async def gpt(ctx, question):
         await ctx.respond("Working on that...")
@@ -43,6 +46,21 @@ def run_discord_bot():
             ]
         )
         await ctx.edit(content="<@"+str(ctx.author.id) + "> asked: " + question + "\n GPT says: " + str(completion.choices[0].message['content'])) #formatted message to @ the user and give the reply
+
+    #-=-=-=-=-=-=-=-=- Dall-e Command -=-=-=-=-=-=-=-=-#
+    @bot.slash_command(description="Generate an image with AI!")
+    async def gptpic(ctx, question):
+        embed = discord.Embed(title="🖼️ AI Image", color=Color.blue(), description=question)
+        embed.set_image(url="https://upload.wikimedia.org/wikipedia/commons/b/b9/Youtube_loading_symbol_1_(wobbly).gif")
+        embed.set_footer(text="Requested by " + ctx.author.name)
+        await ctx.respond(embed=embed)
+        response = openai.Image.create(
+            n=1,
+            size="1024x1024",
+            prompt = question
+        )
+        embed.set_image(url=response.data[0]['url'])
+        await ctx.edit(embed=embed)
 
     # @bot.event
     # async def on_voice_state_update(member, before, after):
