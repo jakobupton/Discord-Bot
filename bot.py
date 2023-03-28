@@ -42,7 +42,7 @@ def run_discord_bot():
                 {"role": "user", "content": question}
             ]
         )
-        await ctx.edit(content=ctx.author.name + " asked: " + question + "\n GPT says:" + str(completion.choices[0].message['content']))
+        await ctx.edit(content="<@"+str(ctx.author.id) + "> asked: " + question + "\n GPT says: " + str(completion.choices[0].message['content'])) #formatted message to @ the user and give the reply
 
     # @bot.event
     # async def on_voice_state_update(member, before, after):
@@ -68,5 +68,6 @@ def run_discord_bot():
             await message.add_reaction('🅾️')
             await message.add_reaction('🇴')
             await message.add_reaction('🅱️')
+        print(message.author.name + " said: " + message.content)
 
     bot.run(token)
