@@ -20,7 +20,10 @@ for (const folder of commandFolders) {
 		if ('data' in command && 'execute' in command) {
 			client.commands.set(command.data.name, command);
 		} else {
-			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+      fs.appendFile('log.txt', `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.\n`, (err) => {
+        if (err) throw err;
+      }
+    );
 		}
 	}
 }
@@ -34,10 +37,9 @@ client.once('ready', () => {
 client.on('messageCreate', message => {
   // If the message is from the bot, return
   if (message.author.bot) return;
-
-  console.log(`[${message.author.tag} in ${message.channel.name}]: ${message.content}`);
+  fs.appendFileSync('log.txt', `[${getFormattedTime()}] [${message.author.tag} in ${message.channel.name}]: ${message.content}\n`);
   if (message.author.username == "garyguys"){
-    console.log('Calling him a noob');
+    // Log to a file
     message.react('🎄');
     message.react('🇳');
     message.react('🅾️');
@@ -49,8 +51,7 @@ client.on('messageCreate', message => {
 
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
-
-  console.log(`Received command: ${interaction.commandName} from ${interaction.user.tag}` );
+  fs.appendFileSync('log.txt', `[${getFormattedTime()}] Received command: ${interaction.commandName} from ${interaction.user.tag}\n`);
 	const command = interaction.client.commands.get(interaction.commandName);
 
 	if (!command) {
@@ -71,8 +72,13 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 
-// Create Coin Flip Command
-
+function getFormattedTime(){
+  var myDate = new Date();
+  var pstDate = myDate.toLocaleString("en-US", {
+    timeZone: "America/Los_Angeles"
+  })
+  return pstDate;
+}
 
 // Log in to Discord with the bot token
 client.login(process.env.DISCORD_TOKEN);
