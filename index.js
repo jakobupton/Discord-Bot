@@ -35,7 +35,7 @@ client.on('messageCreate', message => {
   // If the message is from the bot, return
   if (message.author.bot) return;
 
-  console.log(`[${message.author.tag}]: ${message.content}`);
+  console.log(`[${message.author.tag} in ${message.channel.name}]: ${message.content}`);
   if (message.author.username == "garyguys"){
     console.log('Calling him a noob');
     message.react('🎄');
