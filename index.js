@@ -3,6 +3,7 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
+const { log } = require('node:console');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 client.commands = new Collection();
 
@@ -20,24 +21,21 @@ for (const folder of commandFolders) {
 		if ('data' in command && 'execute' in command) {
 			client.commands.set(command.data.name, command);
 		} else {
-      fs.appendFile('log.txt', `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.\n`, (err) => {
-        if (err) throw err;
-      }
-    );
+			logToFile(`The command at ${filePath} is missing a required "data" or "execute" property.`);
 		}
 	}
 }
 
 // Event: When the bot is ready
 client.once('ready', () => {
-  console.log(`Logged in as ${client.user.tag}!`);
+  console.log(`Logged in as ${client.user.username}!`);
 });
 
 // Event: When a message is received
 client.on('messageCreate', message => {
   // If the message is from the bot, return
   if (message.author.bot) return;
-  fs.appendFileSync('log.txt', `[${getFormattedTime()}] [${message.author.tag} in ${message.channel.name}]: ${message.content}\n`);
+  logToFile(`${message.author.displayName}(${message.author.tag}) in ${message.channel.name}: ${message.content}`);
   if (message.author.username == "garyguys"){
     // Log to a file
     message.react('🎄');
@@ -51,7 +49,7 @@ client.on('messageCreate', message => {
 
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
-  fs.appendFileSync('log.txt', `[${getFormattedTime()}] Received command: ${interaction.commandName} from ${interaction.user.tag}\n`);
+  logToFile(`${interaction.user.displayName}(${interaction.user.tag}) ran ${interaction.commandName}`);
 	const command = interaction.client.commands.get(interaction.commandName);
 
 	if (!command) {
@@ -78,6 +76,12 @@ function getFormattedTime(){
     timeZone: "America/Los_Angeles"
   })
   return pstDate;
+}
+
+function logToFile(message){
+  fs.appendFile('log.txt', `[${getFormattedTime()}] ${message} \n`, (err) => {
+	if (err) throw err;
+  });
 }
 
 // Log in to Discord with the bot token
