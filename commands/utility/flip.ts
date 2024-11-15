@@ -1,11 +1,11 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder } = require('discord.js');
+import { EmbedBuilder } from "discord.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('flip')
-        .setDescription('Flip a coin!'),
-    async execute(interaction) {
+export default {
+    data: {
+        name: "flip",
+        description: "Flip a coin",
+    },
+    async execute({client, interaction}: any) {
         const flipRandom = Math.floor(Math.random() * 2);
         const outcome = flipRandom === 0 ? 'heads' : 'tails';
         
