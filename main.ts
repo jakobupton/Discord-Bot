@@ -1,7 +1,16 @@
-import { Client, GatewayIntentBits, REST, Routes, Collection, Events, ActivityType } from "npm:discord.js@14.14.1";
-import { join } from "https://deno.land/std@0.106.0/path/mod.ts";
-import "https://deno.land/x/dotenv/load.ts";
-import { Player } from "npm:discord-player";
+import { Client, GatewayIntentBits, REST, Routes, Collection, Events, ActivityType, TextChannel, MessageFlags, PresenceUpdateStatus } from "discord.js";
+import * as fs from "node:fs";
+import * as http from "node:http";
+import * as dotenv from "dotenv";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+import tautulliWebhookHandler from "./tautulli/webhook-handle.js";
+import overseerrWebhookHandler from "./overseerr/webhook-handle.js";
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Create client instance
 const client = new Client({ 
@@ -18,32 +27,21 @@ declare module "discord.js" {
   }
 }
 
-client.player = new Player(client, {
-    ytdlOptions: {
-        filter: 'audioonly',
-        quality: 'highestaudio',
-        highWaterMark: 1 << 25
-    }
-})
-
 // Bot ready event
-client.on("ready", async () => {
+client.on("clientReady", async () => {
   console.log(`Logged in as ${client.user?.tag}!`);
 
   const commands = [];
-  const commandFiles = [];
-  for await (const dirEntry of Deno.readDir(join(Deno.cwd(), 'commands/utility'))) {
-    if (dirEntry.isFile && dirEntry.name.endsWith('.ts')) {
-      commandFiles.push(dirEntry.name);
-    }
-  }
+  const commandsPath = join(__dirname, "commands", "utility")
+  const commandFiles = fs
+    .readdirSync(commandsPath)
+    .filter((file) => file.endsWith(".ts"));
   
   client.user?.setPresence({
-    activities: [{ name: `for christmas noobs`, type: ActivityType.Watching}],
-    status: 'dnd',
+    activities: [{ name: 'christmas noobs', type: ActivityType.Watching}],
+    status: PresenceUpdateStatus.Online,
   })
   
-  // Read all command files
   client.commands = new Collection();
   for (const file of commandFiles) {
     const command = await import(`./commands/utility/${file}`);
@@ -52,7 +50,8 @@ client.on("ready", async () => {
   }
 
   // Register Commands
-  const rest = new REST({ version: '10' }).setToken(Deno.env.get('DISCORD_TOKEN')!);
+  const token = process.env.DISCORD_TOKEN!;
+  const rest = new REST({ version: '10' }).setToken(token);
   try {
     await rest.put(
       Routes.applicationCommands(client.user!.id),
@@ -88,9 +87,7 @@ client.on(Events.InteractionCreate, async interaction => {
 client.on(Events.MessageCreate, async message => {
     if (message.author.bot) return;
 
-    logToFile(`${message.author.displayName}(${message.author.username}): ${message.content}`);
-
-    if (message.author.username === 'garyguys'){
+    if (message.author.id === '362841133971275776'){
         const reactions = ['🎄', '🇳', '🅾️', '🇴', '🅱️'];
         for (const reaction of reactions){
             await message.react(reaction);
@@ -98,16 +95,63 @@ client.on(Events.MessageCreate, async message => {
     }
 })
 
-function getFormattedTime(){
-    const myDate = new Date();
-    const pstDate = myDate.toLocaleString("en-US", {
-      timeZone: "America/Los_Angeles"
-    })
-    return pstDate;
-  }
   
-  function logToFile(message: string){
-    Deno.writeTextFile('log.txt', `[${getFormattedTime()}] ${message}\n`, {append: true});
-  }
 
-client.login(Deno.env.get('DISCORD_TOKEN'));
+const token = process.env.DISCORD_TOKEN;
+if (!token) {
+  throw new Error("DISCORD_TOKEN is not set in environment variables.");
+}
+
+client.login(token);
+
+// Webhook server
+const WEBHOOK_PORT = process.env.WEBHOOK_PORT || 3000;
+const WEBHOOK_PATH = process.env.WEBHOOK_PATH || '/webhook';
+
+const server = http.createServer(async (req, res) => {
+  if (req.method === 'POST' && req.url === WEBHOOK_PATH) {
+    let body = '';
+    
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    
+    req.on('end', async () => {
+      console.log(body);
+      try {
+        const payload = JSON.parse(body);
+        console.log('Webhook received:', payload);
+        switch(payload.origin){
+          case 'tautulli':
+            await tautulliWebhookHandler(client, payload);
+            break;
+          case 'overseerr':
+            await overseerrWebhookHandler(client, payload);
+            break;
+          default:
+            console.warn('Unknown webhook origin:', payload.origin);
+            break;
+        }
+        
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: 'Webhook received' }));
+      } catch (error) {
+        console.error('Webhook processing error:', error);
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Invalid payload' }));
+      }
+    });
+  }else if (req.method === 'GET' && req.url === '/health'){
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok' }));
+  } else {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
+  }
+});
+
+server.listen(WEBHOOK_PORT, () => {
+  console.log(`Webhook server listening on port ${WEBHOOK_PORT}`);
+  console.log(`Webhook endpoint: http://localhost:${WEBHOOK_PORT}${WEBHOOK_PATH}`);
+});

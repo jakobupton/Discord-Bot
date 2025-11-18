@@ -1,0 +1,20 @@
+[Unit]
+Description=Discord Bot with Health Monitoring
+After=network.target
+
+[Service]
+Type=simple
+User=username
+WorkingDirectory=/home/username/Discord-Bot
+ExecStart=/home/username/Discord-Bot/watchdog.sh
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/username/Discord-Bot/systemd.log
+StandardError=append:/home/username/Discord-Bot/systemd.error.log
+
+# Environment
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+Environment="NODE_ENV=production"
+
+[Install]
+WantedBy=multi-user.target
