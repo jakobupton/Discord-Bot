@@ -40,6 +40,11 @@ enum MediaStatus {
     Available = "AVAILABLE",
 }
 
+const MediaType : Record<string, string> = {
+    movie: "Movies",
+    tv: "TV Shows",
+}
+
 function formatAuthorName(username: string, event: NotificationType): string {
     switch (event) {
         case NotificationType.AutoApproved:
@@ -93,7 +98,7 @@ export default async function overseerrWebhookHandler(client: Client, payload: O
             name: formatAuthorName(request.requestedBy_username, notification_type),
             iconURL: request.requestedBy_avatar
           })
-          .setFooter({ text: `jakeplex \u2022 ${media.media_type.charAt(0).toUpperCase() + media.media_type.slice(1)}` })
+          .setFooter({ text: `jakeplex \u2022 ${MediaType[media.media_type]}` })
           .setTimestamp(Date.now());
 
         // silent notification for anything other than available
