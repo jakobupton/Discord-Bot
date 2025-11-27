@@ -41,7 +41,7 @@ export default async function tautulliWebhookHandler(client: Client, payload: We
         const message = new EmbedBuilder()
           .setTitle(embeds?.[0]?.title || 'No Title')
           .setURL(embeds?.[0]?.url || '')
-          .setDescription(embeds?.[0]?.description || '')
+          .setDescription(embeds?.[0]?.description || 'Missing description')
           .setColor(embeds?.[0]?.color || [255, 255, 255])
           .setThumbnail(embeds?.[0]?.thumbnail?.url || '')
           .setFields(embeds?.[0]?.fields || [])
