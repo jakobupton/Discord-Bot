@@ -91,7 +91,8 @@ export default async function overseerrWebhookHandler(client: Client, payload: O
           .setColor(formatColor(notification_type))
           .setFields(
             { name: 'Status', value: formatStatus(media.status), inline: true },
-            { name: 'Request #', value: request.request_id.toString(), inline: true }
+            { name: 'Request #', value: request.request_id.toString(), inline: true },
+            ...payload.extra
           )
           .setThumbnail(image)
           .setAuthor({
